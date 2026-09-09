@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محرر الأخبار الرسمية | من تغريدات إلى أخبار</title>
+<style>
+  :root{
+    --bg:#0f172a;
+    --card:#1e293b;
+    --card-2:#243244;
+    --accent:#0ea5e9;
+    --accent-2:#0284c7;
+    --text:#e2e8f0;
+    --muted:#94a3b8;
+    --border:#334155;
+    --success:#22c55e;
+    --error:#ef4444;
+    --warning:#f59e0b;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', Tahoma, Arial, sans-serif;
+    background:linear-gradient(160deg,#0f172a,#111d33);
+    color:var(--text);
+    min-height:100vh;
+    padding:24px 16px 60px;
+  }
+  .wrap{max-width:780px;margin:0 auto;}
+  header{text-align:center;margin-bottom:28px;}
+  header h1{
+    font-size:1.7rem;margin:0 0 6px;
+    background:linear-gradient(90deg,#38bdf8,#0ea5e9);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  header p{color:var(--muted);margin:0;font-size:0.95rem;}
+
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    padding:22px;margin-bottom:18px;box-shadow:0 10px 30px rgba(0,0,0,0.25);
+  }
+  label{display:block;font-weight:600;margin-bottom:8px;font-size:0.95rem;color:var(--text);}
+  .hint{color:var(--muted);font-size:0.8rem;margin:-4px 0 10px;}
+  .input-row{display:flex;gap:8px;align-items:center;}
+  input[type="password"], input[type="text"], input[type="url"], input[type="date"], textarea{
+    width:100%;
+    padding:12px 14px;border-radius:10px;border:1px solid var(--border);
+    background:var(--card-2);color:var(--text);font-size:0.95rem;outline:none;
+    transition:border-color .2s;font-family:inherit;
+  }
+  textarea{
+    resize:vertical;min-height:110px;line-height:1.8;direction:ltr;text-align:left;
+  }
+  input:focus, textarea:focus{border-color:var(--accent);}
+  .toggle-eye{
+    background:var(--card-2);border:1px solid var(--border);color:var(--muted);
+    border-radius:10px;padding:10px 12px;cursor:pointer;font-size:0.9rem;flex:none;
+  }
+  .checkbox-row{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:0.85rem;color:var(--muted);}
+  .checkbox-row input{width:16px;height:16px;cursor:pointer;flex:none;}
+
+  .date-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+  @media (max-width:480px){.date-grid{grid-template-columns:1fr;}}
+
+  .btn-main{
+    width:100%;padding:14px;border:none;border-radius:12px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    transition:transform .15s, opacity .15s;
+  }
+  .btn-main:hover{transform:translateY(-1px);}
+  .btn-main:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+
+  .spinner{
+    width:18px;height:18px;border:3px solid rgba(255,255,255,0.4);
+    border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:none;
+  }
+  .spinner.show{display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .status{margin-top:14px;padding:12px 14px;border-radius:10px;font-size:0.9rem;display:none;line-height:1.7;}
+  .status.show{display:block;}
+  .status.info{background:rgba(14,165,233,0.12);color:#7dd3fc;border:1px solid rgba(14,165,233,0.35);}
+  .status.error{background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.35);}
+  .status.success{background:rgba(34,197,94,0.12);color:#86efac;border:1px solid rgba(34,197,94,0.35);}
+  .status.warning{background:rgba(245,158,11,0.12);color:#fcd34d;border:1px solid rgba(245,158,11,0.35);}
+
+  .result-box{
+    background:var(--card-2);border:1px solid var(--border);border-radius:12px;
+    padding:18px;min-height:110px;height:auto;max-height:none;overflow:visible;
+    white-space:pre-wrap;word-wrap:break-word;line-height:2;font-size:1.02rem;
+    color:var(--text);margin-bottom:14px;
+  }
+  .result-box:empty::before{
+    content:"سيظهر نص الأخبار المصاغة هنا بعد الضغط على زر (صياغة الأخبار)...";
+    color:var(--muted);
+  }
+  .copy-btn{
+    padding:10px 18px;border-radius:10px;border:1px solid var(--accent);
+    background:transparent;color:var(--accent);cursor:pointer;font-size:0.92rem;
+    font-weight:600;display:inline-flex;align-items:center;gap:6px;
+    transition:background .2s, color .2s;
+  }
+  .copy-btn:hover{background:var(--accent);color:#fff;}
+  .copy-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .section-title{font-size:1rem;font-weight:700;margin:0 0 14px;color:var(--text);display:flex;align-items:center;gap:8px;}
+  .counter-badge{
+    display:inline-block;background:var(--card-2);border:1px solid var(--border);
+    color:var(--muted);font-size:0.78rem;padding:3px 10px;border-radius:999px;margin-top:8px;
+  }
+  footer{text-align:center;color:var(--muted);font-size:0.8rem;margin-top:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🗞️ محرر الأخبار الرسمية</h1>
+    <p>تحويل عدة تغريدات من منصة X إلى قائمة أخبار رسمية موحدة لتقارير الإمارة</p>
+  </header>
+
+  <!-- إعدادات API -->
+  <div class="card">
+    <div class="section-title">🔑 إعدادات المفتاح</div>
+    <label for="apiKey">مفتاح Google Gemini API</label>
+    <div class="input-row">
+      <input type="password" id="apiKey" placeholder="أدخل مفتاح الـ API الخاص بك هنا">
+      <button class="toggle-eye" id="toggleEye" type="button">إظهار</button>
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="saveKey">
+      <label for="saveKey" style="margin:0;font-weight:400;">حفظ المفتاح في هذا المتصفح لعدم تكرار إدخاله</label>
+    </div>
+  </div>
+
+  <!-- إدخال روابط التغريدات + الفترة الزمنية -->
+  <div class="card">
+    <div class="section-title">🔗 روابط التغريدات</div>
+    <label for="tweetLinks">ألصق رابط تغريدة واحداً في كل سطر</label>
+    <div class="hint">مثال: انسخ عدة روابط من حساب الجهة الرسمية وألصقها هنا، رابط تحت رابط.</div>
+    <textarea id="tweetLinks" rows="5" placeholder="https://x.com/username/status/1111111111
+https://x.com/username/status/2222222222
+https://x.com/username/status/3333333333"></textarea>
+
+    <div class="date-grid">
+      <div>
+        <label for="fromDate">من تاريخ (اختياري)</label>
+        <input type="date" id="fromDate">
+      </div>
+      <div>
+        <label for="toDate">إلى تاريخ (اختياري)</label>
+        <input type="date" id="toDate">
+      </div>
+    </div>
+    <div class="hint">اترك الحقلين فارغين لمعالجة جميع الروابط المُدخلة بدون فلترة تاريخ.</div>
+
+    <button class="btn-main" id="generateBtn" style="margin-top:16px;">
+      <span class="spinner" id="spinner"></span>
+      <span id="btnLabel">✨ صياغة الأخبار</span>
+    </button>
+
+    <div class="status" id="statusBox"></div>
+  </div>
+
+  <!-- نتيجة الأخبار -->
+  <div class="card">
+    <div class="section-title">📄 نص الأخبار المصاغة</div>
+    <div class="result-box" id="resultBox"></div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="copy-btn" id="copyBtn" disabled>📋 نسخ النص</button>
+      <button class="copy-btn" id="exportDocBtn" disabled>📥 تصدير Word (.doc)</button>
+    </div>
+  </div>
+
+  <footer>يُستخدم هذا الأداة لأغراض إدارية داخلية — يُرجى مراجعة النص المصاغ قبل الاعتماد النهائي.</footer>
+</div>
+
+<script>
+(function(){
+  const apiKeyInput = document.getElementById('apiKey');
+  const saveKeyCheckbox = document.getElementById('saveKey');
+  const toggleEye = document.getElementById('toggleEye');
+  const tweetLinksInput = document.getElementById('tweetLinks');
+  const fromDateInput = document.getElementById('fromDate');
+  const toDateInput = document.getElementById('toDate');
+  const generateBtn = document.getElementById('generateBtn');
+  const spinner = document.getElementById('spinner');
+  const btnLabel = document.getElementById('btnLabel');
+  const statusBox = document.getElementById('statusBox');
+  const resultBox = document.getElementById('resultBox');
+  const copyBtn = document.getElementById('copyBtn');
+  const exportDocBtn = document.getElementById('exportDocBtn');
+
+  const STORAGE_KEY = 'gemini_api_key_v1';
+
+  const savedKey = localStorage.getItem(STORAGE_KEY);
+  if(savedKey){
+    apiKeyInput.value = savedKey;
+    saveKeyCheckbox.checked = true;
+  }
+
+  toggleEye.addEventListener('click', function(){
+    if(apiKeyInput.type === 'password'){
+      apiKeyInput.type = 'text';
+      toggleEye.textContent = 'إخفاء';
+    } else {
+      apiKeyInput.type = 'password';
+      toggleEye.textContent = 'إظهار';
+    }
+  });
+
+  saveKeyCheckbox.addEventListener('change', function(){
+    if(saveKeyCheckbox.checked){
+      if(apiKeyInput.value.trim()){
+        localStorage.setItem(STORAGE_KEY, apiKeyInput.value.trim());
+      }
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  });
+
+  apiKeyInput.addEventListener('input', function(){
+    if(saveKeyCheckbox.checked){
+      localStorage.setItem(STORAGE_KEY, apiKeyInput.value.trim());
+    }
+  });
+
+  function showStatus(message, type){
+    statusBox.textContent = message;
+    statusBox.className = 'status show ' + type;
+  }
+  function hideStatus(){
+    statusBox.className = 'status';
+    statusBox.textContent = '';
+  }
+  function setLoading(isLoading, label){
+    generateBtn.disabled = isLoading;
+    spinner.classList.toggle('show', isLoading);
+    btnLabel.textContent = isLoading ? (label || 'جاري المعالجة...') : '✨ صياغة الأخبار';
+  }
+
+  function extractTweetId(url){
+    try{
+      const match = url.trim().match(/status(?:es)?\/(\d+)/);
+      return match && match[1] ? match[1] : null;
+    }catch(e){ return null; }
+  }
+  function extractUsername(url){
+    try{
+      const cleaned = url.trim().replace(/^https?:\/\//,'').replace(/^www\./,'');
+      const parts = cleaned.split('/').filter(Boolean);
+      return parts.length >= 3 ? parts[1] : 'i';
+    }catch(e){ return 'i'; }
+  }
+
+  // جلب بيانات تغريدة واحدة (النص + تاريخ النشر)
+  async function fetchTweetData(tweetUrl){
+    const tweetId = extractTweetId(tweetUrl);
+    if(!tweetId){
+      return { ok:false, url: tweetUrl, error: 'رابط غير صالح' };
+    }
+    const username = extractUsername(tweetUrl);
+    const apiUrl = `https://api.fxtwitter.com/${encodeURIComponent(username)}/status/${tweetId}`;
+    try{
+      const response = await fetch(apiUrl);
+      if(!response.ok){
+        return { ok:false, url: tweetUrl, error: `تعذر الجلب (رمز ${response.status})` };
+      }
+      const data = await response.json();
+      const tweet = data && data.tweet;
+      if(!tweet || !tweet.text){
+        return { ok:false, url: tweetUrl, error: 'لا يوجد نص في التغريدة' };
+      }
+      let tweetDate = null;
+      if(tweet.created_timestamp){
+        tweetDate = new Date(tweet.created_timestamp * 1000);
+      } else if(tweet.created_at){
+        const parsed = new Date(tweet.created_at);
+        if(!isNaN(parsed.getTime())) tweetDate = parsed;
+      }
+      return { ok:true, url: tweetUrl, id: tweetId, text: tweet.text, date: tweetDate };
+    }catch(e){
+      return { ok:false, url: tweetUrl, error: 'فشل الاتصال بالشبكة' };
+    }
+  }
+
+  // شبكة أمان: تضمن إضافة "الكريم" بعد كل ذكر لـ"سموه" حتى لو أغفلها النموذج
+  function enforceSmuhKarim(text){
+    return text.replace(/سموه(?!\s*الكريم)/g, 'سموه الكريم');
+  }
+
+  function buildSystemPrompt(){
+    return `أنت محرر أخبار رسمي متخصص في صياغة الأخبار الإدارية لتقارير إمارة المنطقة.
+ستستلم عدة نصوص تغريدات مرقّمة، ومهمتك تحويل كل تغريدة إلى خبر رسمي مستقل بأسلوب إداري احترافي.
+
+القواعد الإلزامية لكل خبر:
+1. ابدأ كل خبر بفعل ماضٍ مبني للمعلوم مناسب للسياق، مثل: استقبل، تسلّم، رعى، دشّن، اطّلع، تفقّد، قدّم، شارك، التقى، ناقش، وقّع، افتتح.
+2. في كل موضع تُذكر فيه كلمة "سموه" إشارةً إلى الأمير أو نائبه، أضف بعدها مباشرة كلمة "الكريم" فتصبح "سموه الكريم" (مثل: "استقبل سموه الكريم"، "تسلّم سموه الكريم"، "اطّلع سموه الكريم"). طبّق هذا في كل تكرار لكلمة "سموه" دون استثناء.
+3. لا تذكر أي تواريخ أو أوقات نهائياً (أيام الأسبوع، الساعات، التواريخ الميلادية أو الهجرية).
+4. احذف جميع الهاشتاقات (#) والروابط (URLs) ورموز الإيموجي نهائياً.
+5. لا تضع أي أقواس أو ملاحظات أو مقدمات تحذيرية أو ترحيبية.
+6. حافظ على المعلومات والأسماء والمناصب والجهات المذكورة دون تحريف.
+7. استخدم لغة عربية فصحى رسمية تليق بالمراسلات الحكومية.
+
+تنسيق الإخراج:
+- أخرج كل خبر كفقرة مستقلة ومتكاملة.
+- افصل بين كل خبر والذي يليه بسطر فارغ واحد فقط.
+- لا تستخدم ترقيماً، ولا تعداداً نقطياً، ولا عناوين، ولا أي رمز فاصل غير السطر الفارغ.
+- لا تُخرج أي نص تمهيدي أو ختامي، فقط الأخبار نفسها بالتتابع.`;
+  }
+
+  async function generateBatchNews(apiKey, tweetsArray){
+    const model = 'gemini-flash-latest';
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+    const numbered = tweetsArray.map(function(t, i){
+      return `[تغريدة ${i+1}]\n"""${t.text}"""`;
+    }).join('\n\n');
+
+    const body = {
+      systemInstruction: { parts: [{ text: buildSystemPrompt() }] },
+      contents: [{
+        role: 'user',
+        parts: [{ text: `فيما يلي ${tweetsArray.length} تغريدة. صُغ خبراً رسمياً مستقلاً لكل واحدة وفق القواعد المحددة، بنفس الترتيب:\n\n${numbered}` }]
+      }],
+      generationConfig: {
+        temperature: 0.4,
+        maxOutputTokens: 8192
+      }
+    };
+
+    let response;
+    try{
+      response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    }catch(networkErr){
+      throw new Error('NETWORK_BLOCKED');
+    }
+
+    if(!response.ok){
+      const errData = await response.json().catch(()=>null);
+      const msg = errData && errData.error && errData.error.message ? errData.error.message : `فشل الطلب برمز الحالة ${response.status}`;
+      throw new Error(msg);
+    }
+
+    const data = await response.json();
+    const candidate = data && data.candidates && data.candidates[0];
+    const finishReason = candidate && candidate.finishReason;
+    const text = candidate && candidate.content && candidate.content.parts && candidate.content.parts[0] && candidate.content.parts[0].text;
+
+    if(!text){
+      throw new Error('لم يتمكن النموذج من توليد نص الأخبار، يرجى المحاولة مرة أخرى.');
+    }
+    return { text: text.trim(), truncated: finishReason === 'MAX_TOKENS' };
+  }
+
+  generateBtn.addEventListener('click', async function(){
+    hideStatus();
+    resultBox.textContent = '';
+    copyBtn.disabled = true;
+    exportDocBtn.disabled = true;
+
+    const apiKey = apiKeyInput.value.trim();
+    const rawLinks = tweetLinksInput.value.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+
+    if(!apiKey){
+      showStatus('⚠️ الرجاء إدخال مفتاح Google Gemini API أولاً.', 'error');
+      apiKeyInput.focus();
+      return;
+    }
+    if(rawLinks.length === 0){
+      showStatus('⚠️ الرجاء إدخال رابط تغريدة واحد على الأقل.', 'error');
+      tweetLinksInput.focus();
+      return;
+    }
+
+    const invalidLinks = rawLinks.filter(function(l){ return !extractTweetId(l); });
+    if(invalidLinks.length === rawLinks.length){
+      showStatus('⚠️ جميع الروابط المُدخلة غير صحيحة. تأكد من أنها روابط تغريدات صالحة من منصة X.', 'error');
+      return;
+    }
+
+    const fromDate = fromDateInput.value ? new Date(fromDateInput.value + 'T00:00:00') : null;
+    const toDate = toDateInput.value ? new Date(toDateInput.value + 'T23:59:59') : null;
+
+    setLoading(true, 'جاري جلب التغريدات...');
+    showStatus(`⏳ جاري جلب بيانات ${rawLinks.length} تغريدة...`, 'info');
+
+    try{
+      const results = await Promise.all(rawLinks.map(fetchTweetData));
+
+      const failed = results.filter(function(r){ return !r.ok; });
+      let valid = results.filter(function(r){ return r.ok; });
+
+      const outOfRange = [];
+      if(fromDate || toDate){
+        valid = valid.filter(function(r){
+          if(!r.date) return true; // لا يوجد تاريخ متاح، نُبقيه احتياطاً بدل استبعاده خطأً
+          if(fromDate && r.date < fromDate){ outOfRange.push(r.url); return false; }
+          if(toDate && r.date > toDate){ outOfRange.push(r.url); return false; }
+          return true;
+        });
+      }
+
+      if(valid.length === 0){
+        let msg = '⚠️ لم يتبقَ أي تغريدة صالحة للمعالجة بعد الفلترة.';
+        if(failed.length > 0){
+          msg += ` تعذر جلب ${failed.length} رابط.`;
+        }
+        if(outOfRange.length > 0){
+          msg += ` تم استبعاد ${outOfRange.length} تغريدة خارج النطاق الزمني المحدد.`;
+        }
+        showStatus(msg, 'error');
+        setLoading(false);
+        return;
+      }
+
+      let warnParts = [];
+      if(failed.length > 0) warnParts.push(`تعذر جلب ${failed.length} رابط`);
+      if(outOfRange.length > 0) warnParts.push(`استُبعدت ${outOfRange.length} تغريدة خارج النطاق الزمني`);
+      if(warnParts.length > 0){
+        showStatus('⏳ جاري صياغة الأخبار... (' + warnParts.join(' — ') + ')', 'info');
+      } else {
+        showStatus('⏳ جاري صياغة الأخبار باستخدام الذكاء الاصطناعي...', 'info');
+      }
+      setLoading(true, 'جاري الصياغة...');
+
+      const genResult = await generateBatchNews(apiKey, valid);
+
+      resultBox.textContent = enforceSmuhKarim(genResult.text);
+      copyBtn.disabled = false;
+      exportDocBtn.disabled = false;
+
+      if(genResult.truncated){
+        showStatus('⚠️ تم توليد النص لكنه قد يكون غير مكتمل (تجاوز الحد الأقصى للمخرجات). قلّل عدد التغريدات في الدفعة الواحدة وحاول مجدداً.', 'warning');
+      } else if(warnParts.length > 0){
+        showStatus('✅ تم صياغة الأخبار (' + valid.length + ' من ' + rawLinks.length + '). ' + warnParts.join(' — ') + '.', 'success');
+      } else {
+        showStatus('✅ تم صياغة جميع الأخبار بنجاح (' + valid.length + ' خبر).', 'success');
+      }
+
+    }catch(err){
+      let message = 'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.';
+      if(err && err.message === 'NETWORK_BLOCKED'){
+        message = '⚠️ تعذر الوصول إلى خوادم Gemini بالكامل. جرّب شبكة إنترنت مختلفة أو عطّل أي VPN/إضافات حظر.';
+      } else if(err && err.message){
+        message = '⚠️ خطأ من واجهة Gemini: ' + err.message;
+      }
+      showStatus(message, 'error');
+    }finally{
+      setLoading(false);
+    }
+  });
+
+  // نسخ النص مع بديل احتياطي عند فشل Clipboard API
+  async function copyTextToClipboard(text){
+    if(navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext){
+      try{
+        await navigator.clipboard.writeText(text);
+        return true;
+      }catch(e){ /* ننتقل للبديل */ }
+    }
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return successful;
+    }catch(e){
+      return false;
+    }
+  }
+
+  copyBtn.addEventListener('click', async function(){
+    const text = resultBox.textContent;
+    if(!text) return;
+    const ok = await copyTextToClipboard(text);
+    if(ok){
+      const original = copyBtn.textContent;
+      copyBtn.textContent = '✅ تم النسخ';
+      setTimeout(function(){ copyBtn.textContent = original; }, 1800);
+    }else{
+      showStatus('⚠️ تعذر النسخ التلقائي في هذا المتصفح. حدد النص من الصندوق أعلاه وانسخه يدوياً (اضغط مطولاً ثم "نسخ").', 'warning');
+    }
+  });
+
+  // تصدير النص كملف Word (.doc) قابل للفتح مباشرة في Microsoft Word
+  function escapeHtml(str){
+    return str
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }
+
+  function exportToDoc(text){
+    const paragraphs = text.split(/\n{2,}/).filter(function(p){ return p.trim().length > 0; })
+      .map(function(p){
+        return '<p style="margin:0 0 16pt 0; text-align:justify; line-height:1.9;">' + escapeHtml(p.trim()).replace(/\n/g,'<br>') + '</p>';
+      }).join('\n');
+
+    const htmlContent = '<html xmlns:o="urn:schemas-microsoft-com:office:office" '
+      + 'xmlns:w="urn:schemas-microsoft-com:office:word" '
+      + 'xmlns="http://www.w3.org/TR/REC-html40">'
+      + '<head><meta charset="utf-8"><title>تقرير الأخبار الرسمية</title>'
+      + '<style>'
+      + '@page{ mso-page-orientation: portrait; }'
+      + 'body{ font-family:"Arial","Traditional Arabic",sans-serif; font-size:14pt; direction:rtl; }'
+      + 'h1{ font-size:16pt; text-align:center; margin-bottom:20pt; }'
+      + '</style></head>'
+      + '<body dir="rtl">'
+      + '<h1>تقرير الأخبار الرسمية</h1>'
+      + paragraphs
+      + '</body></html>';
+
+    const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'تقرير-الاخبار-' + Date.now() + '.doc';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+  }
+
+  exportDocBtn.addEventListener('click', function(){
+    const text = resultBox.textContent;
+    if(!text) return;
+    exportToDoc(text);
+  });
+
+})();
+</script>
+</body>
+</html>
